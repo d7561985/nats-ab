@@ -1,0 +1,7 @@
+= NATS-AB
+
+Load test platform which terraform based. We try to deploy NATS JS cluster with Leaf protocol and measure rpc bandwidth.
+
+== Manuals
+* https://github.com/nats-io/jetstream-leaf-nodes-demo
+* https://www.youtube.com/watch?v=0MkS_S7lyHk
