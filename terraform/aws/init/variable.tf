@@ -32,3 +32,8 @@ variable "INSTANCE_TYPE" {
   type = string
   default = "t3.medium"
 }
+
+variable "ports" {
+  type = set(string)
+  default = [22]
+}

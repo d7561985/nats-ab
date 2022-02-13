@@ -32,7 +32,7 @@ resource "aws_security_group" "instance" {
   vpc_id      = data.aws_vpc.default.id
 
   tags = {
-    Name =var.ENVIRONMENT
+    Name = var.ENVIRONMENT
   }
 
   lifecycle {
@@ -61,11 +61,12 @@ resource "aws_security_group_rule" "ssh" {
 }
 
 resource "aws_security_group_rule" "nats" {
+  for_each    = var.ports
   type        = "ingress"
-  from_port   = 4222
-  to_port     = 4222
+  from_port   = each.value
+  to_port     = each.value
   protocol    = "tcp"
-  cidr_blocks = [data.aws_vpc.default.cidr_block]
+  cidr_blocks = ["0.0.0.0/0", data.aws_vpc.default.cidr_block]
 
   security_group_id = aws_security_group.instance.id
 }
@@ -92,18 +93,17 @@ resource "aws_launch_template" "template" {
     resource_type = "instance"
 
     tags = {
-      Name = "${var.ENVIRONMENT}-mongodb"
+      Name = var.ENVIRONMENT
     }
   }
 
-  user_data = base64encode("${path.module}/mongo.sh")
+  user_data = filebase64("${path.module}/userdata.sh")
 }
 
 resource "aws_instance" "instance" {
   for_each = var.names
 
   instance_type = var.INSTANCE_TYPE
-
 
   #  availability_zone = "${var.AWS_REGION}a"
   subnet_id       = data.aws_subnet.default.id
@@ -119,8 +119,8 @@ resource "aws_instance" "instance" {
   root_block_device {
     volume_size = 8
     volume_type = "gp2"
-#    iops        = 16000
-#    throughput  = 250
+    #    iops        = 16000
+    #    throughput  = 250
   }
 
   user_data_base64 = filebase64("${path.module}/userdata.sh")
