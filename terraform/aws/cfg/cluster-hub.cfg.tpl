@@ -13,12 +13,20 @@ cluster {
 %{ endfor ~}
     ]
 }
+
+%{if !isHub}
 leafnodes {
     listen 0.0.0.0:4224
     no_advertise: true
 }
+%{endif}
+
 mqtt {
     port: 4225
 }
 http: 0.0.0.0:8080
 #include ./nats-account-resolver.cfg
+
+%{if !isHub}
+include ./${leafConf}
+%{endif}
