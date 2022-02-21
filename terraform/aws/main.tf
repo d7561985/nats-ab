@@ -15,6 +15,8 @@ provider "aws" {
 module "cluster-hub" {
   source = "./init"
 
+  ENVIRONMENT = "hub"
+
 #  INSTANCE_TYPE = "r5d.2xlarge"
   SPOT_PRICE = "0.99"
   names = ["node1", "node2"]
@@ -23,10 +25,12 @@ module "cluster-hub" {
 
 module "cluster-spoke-1" {
   source = "./init"
+  ENVIRONMENT = "spoke-1"
 
   # INSTANCE_TYPE = "r5d.2xlarge"
   SPOT_PRICE = "0.99"
-  default = ["node1", "node2"]
+  names = ["spoke-1", "spoke-2"]
+  ports = [4222, 4223, 4224, 4225, 8080]
 }
 
 #
@@ -39,7 +43,7 @@ module "cluster-spoke-1" {
 #}
 
 locals {
-  leafConf: "leaf.conf"
+  leafConf= "leaf.conf"
 }
 
 resource "null_resource" "upload-hub" {

@@ -35,5 +35,5 @@ variable "INSTANCE_TYPE" {
 
 variable "ports" {
   type = set(string)
-  default = [22]
+  default = []
 }
