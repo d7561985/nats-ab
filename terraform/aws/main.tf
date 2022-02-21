@@ -17,20 +17,20 @@ module "cluster-hub" {
 
   ENVIRONMENT = "hub"
 
-#  INSTANCE_TYPE = "r5d.2xlarge"
+  #  INSTANCE_TYPE = "r5d.2xlarge"
   SPOT_PRICE = "0.99"
-  names = ["node1", "node2"]
-  ports = [4222, 4223, 4224, 4225, 8080]
+  names      = ["node1", "node2"]
+  ports      = [4222, 4223, 4224, 4225, 8080]
 }
 
 module "cluster-spoke-1" {
-  source = "./init"
+  source      = "./init"
   ENVIRONMENT = "spoke-1"
 
   # INSTANCE_TYPE = "r5d.2xlarge"
   SPOT_PRICE = "0.99"
-  names = ["spoke-1", "spoke-2"]
-  ports = [4222, 4223, 4224, 4225, 8080]
+  names      = ["spoke-1", "spoke-2"]
+  ports      = [4222, 4223, 4224, 4225, 8080]
 }
 
 #
@@ -43,7 +43,8 @@ module "cluster-spoke-1" {
 #}
 
 locals {
-  leafConf= "leaf.conf"
+  leafConf    = "leaf.conf"
+  allprivate = concat(values(module.cluster-hub.private_ip), values(module.cluster-spoke-1.private_ip))
 }
 
 resource "null_resource" "upload-hub" {
@@ -59,11 +60,17 @@ resource "null_resource" "upload-hub" {
   provisioner "file" {
     destination = "/home/ec2-user/cluster-hub.conf"
     content     = templatefile("${path.module}/cfg/cluster-hub.cfg.tpl", {
-      host: each.value,
-      nodes: module.cluster-hub.private_ip,
-      domain: "hub",
-      isHub: true,
-      leafConf: local.leafConf,
+      host : each.value,
+      nodes : module.cluster-hub.private_ip,
+      domain : "hub",
+      isHub : true,
+      leafConf : local.leafConf,
+      route_user : "r_user",
+      route_psw : "r_psw",
+      leaf_user: "l_user",
+      leaf_psw: "l_pwd",
+      account: "xxx",
+      cluster: "cluster-hub"
     })
   }
 
@@ -83,18 +90,27 @@ resource "null_resource" "upload-leaf" {
   provisioner "file" {
     destination = "/home/ec2-user/cluster-hub.conf"
     content     = templatefile("${path.module}/cfg/cluster-hub.cfg.tpl", {
-      host: each.value,
-      nodes: module.cluster-hub.private_ip,
-      domain: "hub",
-      isHub: false,
-      leafConf: local.leafConf,
+      host : each.value,
+      nodes : module.cluster-spoke-1.private_ip,
+      domain : "leaf",
+      isHub : false,
+      leafConf : local.leafConf,
+      leaf_user: "l_user",
+      leaf_psw: "l_pwd",
+      route_user : "r_user",
+      route_psw : "r_psw"
+      account: "xxx",
+      cluster: "cluster-leaf"
     })
   }
 
   provisioner "file" {
     destination = "/home/ec2-user/${local.leafConf}"
     content     = templatefile("${path.module}/cfg/leaf.cfg.tpl", {
-      hub: module.cluster-hub.private_ip,
+      hub : module.cluster-hub.private_ip,
+      leaf_user: "l_user",
+      leaf_psw: "l_pwd",
+      account: "SYS", # require system account
     })
   }
 

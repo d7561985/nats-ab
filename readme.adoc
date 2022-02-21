@@ -5,3 +5,77 @@ Load test platform which terraform based. We try to deploy NATS JS cluster with 
 == Manuals
 * https://github.com/nats-io/jetstream-leaf-nodes-demo
 * https://www.youtube.com/watch?v=0MkS_S7lyHk
+
+
+==
+[source]
+----
+nats-server -c cluster-hub.conf
+----
+
+== outpus
+.context_sys
+create context in nats, contains all servers
+
+.context_hub
+create context in nats, contain hub server
+
+.context_spoke_1
+create context in nats, contains spoke-1 server
+
+
+=== test
+install natscli
+
+for AWS Linux 2:
+[source, bash]
+----
+curl -L https://github.com/nats-io/natscli/releases/download/v0.0.29/nats-0.0.29-linux-amd64.zip -o natscli.zip
+unzip natscli.zip -d natscli
+cp natscli/nats-0.0.29-linux-amd64/nats /usr/bin
+----
+
+add contexts (from output), example:
+[source]
+----
+nats context save sys --server "nats://172.31.20.65:4222,nats://172.31.29.145:4222,nats://172.31.30.204:4222,nats://172.31.21.18:4222"
+
+ nats context save spoke-1 --server "nats://172.31.30.204:4222,nats://172.31.21.18:4222"
+
+nats context save hub --server "nats://172.31.20.65:4222,nats://172.31.29.145:4222,"
+
+----
+
+check out
+[source,bash]
+----
+nats --context=sys --user demo_admin --password demo_psw server list 4
+----
+
+looks like:
+[source,bash]
+----
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                     Server Overview                                                      │
+├─────────────┬─────────────┬───────────┬─────────┬─────┬───────┬──────┬────────┬─────┬────────┬─────┬──────┬────────┬─────┤
+│ Name        │ Cluster     │ IP        │ Version │ JS  │ Conns │ Subs │ Routes │ GWs │ Mem    │ CPU │ Slow │ Uptime │ RTT │
+├─────────────┼─────────────┼───────────┼─────────┼─────┼───────┼──────┼────────┼─────┼────────┼─────┼──────┼────────┼─────┤
+│ srv-leaf158 │ leaf        │ 0.0.0.0   │ 2.7.2   │ yes │ 1     │ 200  │ 1      │ 0   │ 10 MiB │ 0.0 │ 0    │ 2.22s  │ 1ms │
+│ srv-hub228  │ cluster-hub │ 0.0.0.0   │ 2.7.2   │ yes │ 0     │ 152  │ 1      │ 0   │ 11 MiB │ 0.0 │ 0    │ 20.86s │ 1ms │
+│ srv-leaf162 │ leaf        │ 0.0.0.0   │ 2.7.2   │ yes │ 0     │ 200  │ 1      │ 0   │ 11 MiB │ 0.0 │ 0    │ 9.16s  │ 1ms │
+│ srv-hub101  │ cluster-hub │ 0.0.0.0   │ 2.7.2   │ yes │ 0     │ 152  │ 1      │ 0   │ 12 MiB │ 0.0 │ 0    │ 18.90s │ 2ms │
+├─────────────┼─────────────┼───────────┼─────────┼─────┼───────┼──────┼────────┼─────┼────────┼─────┼──────┼────────┼─────┤
+│             │ 2 Clusters  │ 4 Servers │         │ 4   │ 1     │ 704  │        │     │ 44 MiB │     │ 0    │        │     │
+╰─────────────┴─────────────┴───────────┴─────────┴─────┴───────┴──────┴────────┴─────┴────────┴─────┴──────┴────────┴─────╯
+
+╭────────────────────────────────────────────────────────────────────────────────╮
+│                                Cluster Overview                                │
+├─────────────┬────────────┬───────────────────┬───────────────────┬─────────────┤
+│ Cluster     │ Node Count │ Outgoing Gateways │ Incoming Gateways │ Connections │
+├─────────────┼────────────┼───────────────────┼───────────────────┼─────────────┤
+│ cluster-hub │ 2          │ 0                 │ 0                 │ 0           │
+│ leaf        │ 2          │ 0                 │ 0                 │ 1           │
+├─────────────┼────────────┼───────────────────┼───────────────────┼─────────────┤
+│             │ 4          │ 0                 │ 0                 │ 1           │
+╰─────────────┴────────────┴───────────────────┴───────────────────┴─────────────╯
+----
