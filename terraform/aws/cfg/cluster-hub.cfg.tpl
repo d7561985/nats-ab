@@ -11,8 +11,32 @@ accounts: {
             {user: ${sys_user}, password: ${sys_psw}}
         ]
     }
-
-    ${account}: {
+  # Service
+  NOTIFICATION = {
+    users = [
+      {user: 'myservice', password: 'myservice'}
+      {user: 'backend', password: 'backend'}
+    ]
+    jetstream = {
+      max_mem: 24M
+      max_file: 1G
+      max_streams: 5
+      max_consumers: 5
+    }
+    exports = [
+      {stream: someTopic1.>}
+    ]
+  }
+  ADMIN = {
+    users = [
+      {user: ${testUser}, password: ${testPsw}}
+    ]
+    imports = [
+      {stream: {subject: someTopic1.>, account: NOTIFICATION}}
+    ]
+    jetstream = enabled
+  }
+    xxx: {
         users: [
             {user: ${leaf_user}, password: ${leaf_psw}}
         ]
@@ -21,42 +45,13 @@ accounts: {
 
 system_account: SYS
 
-# Auth for user
-authorization {
-    default_permissions = {
-      publish = "SANDBOX.*"
-      subscribe = ["PUBLIC.>", "_INBOX.>"]
-    }
-
-    ADMIN = {
-      publish = ">"
-      subscribe = ">"
-    }
-
-    REQUESTOR = {
-        publish = ["req.a", "req.b"]
-        subscribe = "_INBOX.>"
-    }
-
-    RESPONDER = {
-        subscribe = ["req.a", "req.b"]
-        publish = "_INBOX.>"
-    }
-
-    users: [
-        {user: valera, password: valera, permissions: $ADMIN},
-        {user: requestor, password: requestor, permissions: $REQUESTOR},
-        {user: responder, password: responder, permissions: $RESPONDER},
-    ]
-}
-
 cluster {
     # Authorization for route connections
     # Other server can connect if they supply the credentials listed here
     # This server will connect to discovered routes using this user
     authorization {
-      user: ${route_user}
-      password: ${route_psw}
+      user: ${cluster_user}
+      password: ${cluster_psw}
       timeout: 0.5
     }
 
@@ -64,7 +59,7 @@ cluster {
     name ${cluster}
     routes = [
 %{ for id, hh in nodes ~}
-        nats-route://${route_user}:${route_psw}@${hh}:4223
+        nats-route://${cluster_user}:${cluster_psw}@${hh}:4223
 %{ endfor ~}
     ]
 }

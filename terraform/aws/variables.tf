@@ -1,6 +1,6 @@
 variable "sys_user" {
   type = string
-  default = "demo_admin"
+  default = "d"
 }
 
 variable "sys_psw" {
