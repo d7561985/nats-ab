@@ -157,6 +157,12 @@ nats bench test --context  hub  --sub 20  --reply --msgs 1000000 --size 16
 [source, bash]
 nats bench test --context hub   --pub 20 --request --msgs 1000000 --size 16
 
+===== B
+[source, bash]
+nats bench test --context  hub  --sub 20  --reply --msgs 1000000 --size 16
+
+[source, bash]
+nats bench test --context hub   --pub 100 --request --msgs 1000000 --size 16
 
 ==== request/reply latency test(spoke-1->hub->spoke-1)
 ===== A
@@ -166,15 +172,22 @@ nats bench test --context  hub --sub 20 --reply --msgs 1000000 --size 16
 [source, bash]
 nats bench test --context spoke-1 --pub 20 --request --msgs 1000000 --size 16
 
+===== B
+[source, bash]
+nats bench test --context  hub --sub 20 --reply --msgs 1000000 --size 16
+
+[source, bash]
+nats bench test --context spoke-1 --pub 100 --request --msgs 1000000 --size 16
+
 
 ==== JetStream publication performance (file)
 ===== A
 [source, bash]
-nats bench test --context  hub --js --pub 10 --size 16 --msgs 1000000 --storage="file"  --stream="benchstream-file"
+nats bench test --context hub --js --pub 10 --size 16 --msgs 1000000 --storage="file"  --stream="benchstream-file"
 
 ===== B
 [source, bash]
-nats bench test --context  spoke-1 --js --pub 10 --size 16 --msgs 1000000 --storage="file" --stream="benchstream-file"
+nats bench test --context spoke-1 --js --pub 10 --size 16 --msgs 1000000 --storage="file" --stream="benchstream-file"
 
 ==== JetStream publication performance (memory)
 ===== A
@@ -183,7 +196,7 @@ nats bench test --context  hub --js --pub 10 --size 16 --msgs 1000000 --storage=
 
 ===== B
 [source, bash]
-nats bench test --context  spoke-10 --js --pub 10 --size 16 --msgs 1000000 --storage="memory"
+nats bench test --context  spoke-1 --js --pub 10 --size 16 --msgs 1000000 --storage="memory"
 
 ==== JetStream consumption (replay) performance (memory)
 ===== A
@@ -192,7 +205,7 @@ nats bench test --context  hub --js --sub 10 --size 16 --msgs 1000000 --storage=
 
 ===== B
 [source, bash]
-nats bench test --context  spoke-10 --js --sub 10 --size 16 --msgs 1000000 --storage="memory"
+nats bench test --context  spoke-1 --js --sub 10 --size 16 --msgs 1000000 --storage="memory"
 
 
 == Test1
@@ -243,47 +256,47 @@ Topology: hub: t3.medium x2 leaf: t3.medium  x2
 |===
 
 == Test2
-Topology: hub: t3.medium x2 leaf: t3.medium  x2
+Topology: hub: c5.2xlarge x2 leaf: c5.2xlarge  x2
 |===
 |test |A |B
 
 |publisher throughput test(hub)
-|Pub stats: 3,555,226 msgs/sec ~ 54.25 MB/sec
-|Pub stats: 3,809,228 msgs/sec ~ 58.12 MB/sec
+|Pub stats: 4,865,471 msgs/sec ~ 74.24 MB/sec ,
+|Pub stats: 4,773,873 msgs/sec ~ 72.84 MB/sec
 
 |publisher throughput test (spoke-1)
-|Pub stats: 3,697,971 msgs/sec ~ 56.43 MB/sec
-|Pub stats: 3,416,644 msgs/sec ~ 52.13 MB/sec
+|Pub stats: 4,662,209 msgs/sec ~ 71.14 MB/sec
+|Pub stats: 4,659,870 msgs/sec ~ 71.10 MB/sec
 
 |publish/subscribe throughput test(hub->hub)
-|NATS Pub/Sub stats: 1,683,605 msgs/sec ~ 25.69 MB/sec , Pub stats: 880,304 msgs/sec ~ 13.43 MB/sec , Sub stats: 845,475 msgs/sec ~ 12.90 MB/sec
-|NATS Pub/Sub stats: 3,402,393 msgs/sec ~ 51.92 MB/sec , Pub stats: 1,801,641 msgs/sec ~ 27.49 MB/sec , Sub stats: 1,701,385 msgs/sec ~ 25.96 MB/sec
+|NATS Pub/Sub stats: 4,441,848 msgs/sec ~ 67.78 MB/sec ,Pub stats: 2,339,093 msgs/sec ~ 35.69 MB/sec ,Sub stats: 2,264,055 msgs/sec ~ 34.55 MB/sec
+|NATS Pub/Sub stats: 4,990,450 msgs/sec ~ 76.15 MB/sec ,Pub stats: 2,496,330 msgs/sec ~ 38.09 MB/sec ,Sub stats: 2,495,676 msgs/sec ~ 38.08 MB/sec
 
 |publish/subscribe throughput test(hub->spoke-1)
-|Pub stats: 1,835,573 msgs/sec ~ 28.01 MB/sec
-|Pub stats: 3,690,422 msgs/sec ~ 56.31 MB/se
+| Sub stats: 1,851,831 msgs/sec ~ 226.05 MB/sec, Pub stats: 2,543,623 msgs/sec ~ 38.81 MB/sec
+| Sub stats: 2,098,418 msgs/sec ~ 256.15 MB/sec, Pub stats: 2,124,810 msgs/sec ~ 32.42 MB/sec
 
 |publish/subscribe throughput test(spoke-1->hub)
-|Pub stats: 3,254,159 msgs/sec ~ 49.65 MB/sec
-|Pub stats: 3,561,545 msgs/sec ~ 54.34 MB/sec
+| Sub stats: 1,837,465 msgs/sec ~ 224.30 MB/sec, Pub stats: 2,061,719 msgs/sec ~ 31.46 MB/sec
+| Sub stats: 1,973,527 msgs/sec ~ 240.91 MB/sec, Pub stats: 2,093,935 msgs/sec ~ 31.95 MB/sec
 
 |request/reply latency test(hub->hub->hub)
-|Pub stats: 39,091 msgs/sec ~ 610.80 KB/sec
-|
+|Pub stats: 24,426 msgs/sec ~ 381.66 KB/sec ,
+|Pub stats: 84,878 msgs/sec ~ 1.30 MB/sec !!!  PUB 20->100
 
 |request/reply latency test(spoke-1->hub->spoke-1)
-| ,
-|
+|Pub stats: 20,892 msgs/sec ~ 326.44 KB/sec
+|Pub stats: 79,143 msgs/sec ~ 1.21 MB/sec !!!  PUB 20->100
 
 |JetStream publication performance (file)
-|
-|
+|Pub stats: 246,737 msgs/sec ~ 3.76 MB/se
+|Pub stats: 225,923 msgs/sec ~ 3.45 MB/sec
 
 |JetStream publication performance (memory)
-|
-|
+|Pub stats: 287,506 msgs/sec ~ 4.39 MB/sec
+|Pub stats: 245,115 msgs/sec ~ 3.74 MB/sec
 
 |JetStream consumption (replay) performance (memory)
-|
-|
+|Sub stats: 1,159,138 msgs/sec ~ 17.69 MB/sec
+|Sub stats: 1,057,679 msgs/sec ~ 16.14 MB/sec
 |===
