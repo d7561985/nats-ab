@@ -17,7 +17,7 @@ module "cluster-hub" {
 
   ENVIRONMENT = "hub"
 
-  #  INSTANCE_TYPE = "r5d.2xlarge"
+  INSTANCE_TYPE = "c5.2xlarge"
   SPOT_PRICE = "0.99"
   names      = ["node1", "node2"]
   ports      = [4222, 4223, 4224, 4225, 8080]
@@ -27,7 +27,7 @@ module "cluster-spoke-1" {
   source      = "./init"
   ENVIRONMENT = "spoke-1"
 
-  # INSTANCE_TYPE = "r5d.2xlarge"
+  INSTANCE_TYPE = "c5.2xlarge"
   SPOT_PRICE = "0.99"
   names      = ["spoke-1", "spoke-2"]
   ports      = [4222, 4223, 4224, 4225, 8080]
@@ -74,18 +74,16 @@ resource "null_resource" "upload-hub" {
       leafConf : local.leafConf,
       cluster_user : local.clusterUser,
       cluster_psw : local.clusterPsw,
-      leaf_user : local.leafUser,
-      leaf_psw : local.leafPsw,
-      sys_psw : var.sys_psw,
       sys_user : var.sys_user,
-      testUser : local.testUser,
-      testPsw : local.testPsw
+      sys_psw : var.sys_psw,
+      acc_user: var.acc_user,
+      acc_psw: var.acc_psw,
     })
   }
 
-  provisioner "remote-exec" {
-    inline : ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
-  }
+#  provisioner "remote-exec" {
+#    inline =  ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
+#  }
 
   depends_on = [module.cluster-hub]
 }
@@ -109,14 +107,12 @@ resource "null_resource" "upload-leaf" {
       cluster : "cluster-leaf",
       isHub : false,
       leafConf : local.leafConf,
-      leaf_user : local.leafUser,
-      leaf_psw : local.leafPsw,
       cluster_user : local.clusterUser,
       cluster_psw : local.clusterPsw,
-      sys_psw : var.sys_psw,
       sys_user : var.sys_user,
-      testUser : local.testUser,
-      testPsw : local.testPsw
+      sys_psw : var.sys_psw,
+      acc_user: var.acc_user,
+      acc_psw: var.acc_psw,
     })
   }
 
@@ -124,15 +120,17 @@ resource "null_resource" "upload-leaf" {
     destination = "/home/ec2-user/${local.leafConf}"
     content     = templatefile("${path.module}/cfg/leaf.cfg.tpl", {
       hub : module.cluster-hub.private_ip,
-      leaf_user : local.leafUser,
-      leaf_psw : local.leafPsw,
-      account : "SYS", # require system account
+      sys_user : var.sys_user,
+      sys_psw : var.sys_psw,
+      acc_user: var.acc_user,
+      acc_psw: var.acc_psw,
     })
   }
 
-  provisioner "remote-exec" {
-    inline : ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
-  }
+  // why not started?
+#  provisioner "remote-exec" {
+#    inline =  ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
+#  }
 
   depends_on = [module.cluster-hub, module.cluster-spoke-1]
 }

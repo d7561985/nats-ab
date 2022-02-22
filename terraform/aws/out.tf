@@ -12,7 +12,7 @@ output "spoke-1-public_ip" {
 output "context_sys" {
   depends_on = [module.cluster-hub, module.cluster-spoke-1]
   value = <<EOF
-  nats context save sys --user ${local.testUser} --password ${local.testPsw} --server "%{~ for i, v in local.allprivate ~}nats://${v}:4222, %{~ endfor ~}"
+  nats context save sys --user ${var.sys_user} --password ${var.sys_psw} --server "%{~ for i, v in local.allprivate ~}nats://${v}:4222, %{~ endfor ~}"
 EOF
 }
 

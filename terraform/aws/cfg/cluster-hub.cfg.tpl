@@ -12,35 +12,27 @@ accounts: {
         ]
     }
   # Service
-  NOTIFICATION = {
-    users = [
-      {user: 'myservice', password: 'myservice'}
-      {user: 'backend', password: 'backend'}
-    ]
-    jetstream = {
-      max_mem: 24M
-      max_file: 1G
-      max_streams: 5
-      max_consumers: 5
-    }
-    exports = [
-      {stream: someTopic1.>}
-    ]
+    NOTIFICATION = {
+        users = [
+          {user: 'myservice', password: 'myservice'}
+          {user: 'backend', password: 'backend'}
+        ]
+        jetstream = {
+          max_mem: 24M
+          max_file: 1G
+          max_streams: 5
+          max_consumers: 5
+        }
+        exports = [
+          {stream: someTopic1.>}
+        ]
   }
-  ADMIN = {
+  ACC = {
     users = [
-      {user: ${testUser}, password: ${testPsw}}
-    ]
-    imports = [
-      {stream: {subject: someTopic1.>, account: NOTIFICATION}}
+      {user: ${acc_user}, password: ${acc_psw}}
     ]
     jetstream = enabled
   }
-    xxx: {
-        users: [
-            {user: ${leaf_user}, password: ${leaf_psw}}
-        ]
-    },
 }
 
 system_account: SYS
@@ -68,11 +60,6 @@ cluster {
 leafnodes {
     listen 0.0.0.0:4224
     no_advertise: true
-    authorization {
-        user: ${leaf_user}
-        password: ${leaf_psw}
-        account: SYS
-    }
 }
 %{endif}
 
