@@ -70,8 +70,14 @@ resource "null_resource" "upload-hub" {
       leaf_user: "l_user",
       leaf_psw: "l_pwd",
       account: "xxx",
-      cluster: "cluster-hub"
+      cluster: "cluster-hub",
+      sys_psw: var.sys_psw,
+      sys_user: var.sys_user
     })
+  }
+
+  provisioner "remote-exec" {
+    inline: ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
   }
 
   depends_on = [module.cluster-hub]
@@ -100,7 +106,9 @@ resource "null_resource" "upload-leaf" {
       route_user : "r_user",
       route_psw : "r_psw"
       account: "xxx",
-      cluster: "cluster-leaf"
+      cluster: "cluster-leaf",
+      sys_psw: var.sys_psw,
+      sys_user: var.sys_user
     })
   }
 
@@ -112,6 +120,10 @@ resource "null_resource" "upload-leaf" {
       leaf_psw: "l_pwd",
       account: "SYS", # require system account
     })
+  }
+
+  provisioner "remote-exec" {
+    inline: ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
   }
 
   depends_on = [module.cluster-hub, module.cluster-spoke-1]

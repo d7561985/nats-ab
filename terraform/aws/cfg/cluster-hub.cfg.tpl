@@ -8,7 +8,7 @@ jetstream {
 accounts: {
     SYS: {
         users: [
-            {user: demo_admin, password: demo_psw}
+            {user: ${sys_user}, password: ${sys_psw}}
         ]
     }
 
@@ -45,6 +45,8 @@ authorization {
 
     users: [
         {user: valera, password: valera, permissions: $ADMIN},
+        {user: requestor, password: requestor, permissions: $REQUESTOR},
+        {user: responder, password: responder, permissions: $RESPONDER},
     ]
 }
 
@@ -74,7 +76,7 @@ leafnodes {
     authorization {
         user: ${leaf_user}
         password: ${leaf_psw}
-        account: ${account}
+        account: SYS
     }
 }
 %{endif}

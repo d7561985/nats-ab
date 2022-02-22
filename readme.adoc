@@ -79,3 +79,31 @@ looks like:
 │             │ 4          │ 0                 │ 0                 │ 1           │
 ╰─────────────┴────────────┴───────────────────┴───────────────────┴─────────────╯
 ----
+
+
+=== compliance
+==== scenario 1
+Sub in spoke-1 cluster:
+[source, bash]
+nats bench test --context spoke-1  --user demo_admin --password demo_psw  --sub 1 --msgs 100000
+
+Pub in hub cluster:
+[source, bash]
+nats bench test --context hub  --user demo_admin --password demo_psw  --pub 10 --msgs 100000
+
+==== scenario 2 (pub/sub hub->spoke-1)
+pub/sub
+
+[source, bash]
+nats bench test --context spoke-1  --user demo_admin --password demo_psw  --sub 1 --msgs 1000 --reply
+
+[source, bash]
+nats bench test --context hub  --user demo_admin --password demo_psw  --pub 100 --msgs 1000 --request
+
+==== scenario 3 (pub/sub  spoke-1->hub)
+
+[source, bash]
+nats bench test --context hub  --user demo_admin --password demo_psw  --sub 1 --msgs 1000 --reply
+
+[source, bash]
+nats bench test --context spoke-1  --user demo_admin --password demo_psw  --pub 100 --msgs 1000 --request
