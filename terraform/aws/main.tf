@@ -20,7 +20,7 @@ module "cluster-hub" {
   INSTANCE_TYPE = "c5.2xlarge"
   SPOT_PRICE    = "0.99"
   names         = ["node1", "node2"]
-  ports         = [4222, 4223, 4224, 4225, 8080]
+  ports         = [4222, 4223, 4224, 4225, 7222, 8080]
 }
 
 module "cluster-spoke-1" {
@@ -30,7 +30,7 @@ module "cluster-spoke-1" {
   INSTANCE_TYPE = "c5.2xlarge"
   SPOT_PRICE    = "0.99"
   names         = ["spoke-1", "spoke-2"]
-  ports         = [4222, 4223, 4224, 4225, 8080]
+  ports         = [4222, 4223, 4224, 4225, 7222, 8080]
 }
 
 #
@@ -81,6 +81,7 @@ resource "null_resource" "upload-hub" {
       acc_psw : var.acc_psw,
       gw_user: local.gw_user,
       gw_psw: local.gw_psw,
+      cluster_nodes: {}
     })
   }
 
@@ -129,6 +130,9 @@ resource "null_resource" "upload-leaf" {
       acc_psw : var.acc_psw,
       gw_user: local.gw_user,
       gw_psw: local.gw_psw,
+      cluster_nodes: {
+        "cluster-hub" : module.cluster-hub.public_ip
+      }
     })
   }
 

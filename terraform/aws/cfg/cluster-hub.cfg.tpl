@@ -60,20 +60,21 @@ cluster {
     ]
 }
 
-gateway {
-  name: ${cluster}
-  port: 7222
-  authorization {
-    user: ${gw_user}
-    password: ${gw_psw}
-    timeout: 0.75
-  }
-  gateways: [
-%{ for id, hh in nodes ~}
-        nats://${gw_user}:${gw_psw}@${hh}:7222
-%{ endfor ~}
-  ]
-}
+# Gateways enable connecting one or more clusters together into a full mesh
+#gateway {
+#  name: ${cluster}
+#  port: 7222
+#  authorization {
+#    user: ${gw_user}
+#    password: ${gw_psw}
+#    timeout: 0.75
+#  }
+#  gateways: [
+#%{ for id, hub in cluster_nodes ~}
+#  {name: "${cluster}", urls: [%{ for hh in hub ~}"nats://${gw_user}:${gw_psw}@${hh}:7222",%{ endfor ~}]},
+#%{ endfor ~}
+#  ]
+#}
 
 mqtt {
     port: 4225
