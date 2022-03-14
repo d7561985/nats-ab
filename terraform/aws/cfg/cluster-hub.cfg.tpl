@@ -1,8 +1,12 @@
 listen: 0.0.0.0:4222
+http: 0.0.0.0:8080
 server_name: srv-${domain}-${host}
+
 jetstream {
-    store_dir: "./s1-1"
+    store_dir: "./data"
     domain: ${domain}
+    #max_mem: 8G
+    #max_file: 8G
 }
 
 accounts: {
@@ -56,19 +60,25 @@ cluster {
     ]
 }
 
-%{if isHub}
-leafnodes {
-    listen 0.0.0.0:4224
-    no_advertise: true
+gateway {
+  name: ${cluster}
+  port: 7222
+  authorization {
+    user: ${gw_user}
+    password: ${gw_psw}
+    timeout: 0.75
+  }
+  gateways: [
+%{ for id, hh in nodes ~}
+        nats://${gw_user}:${gw_psw}@${hh}:7222
+%{ endfor ~}
+  ]
 }
-%{endif}
 
 mqtt {
     port: 4225
 }
-http: 0.0.0.0:8080
+
+include ./${leafConf}
 #include ./nats-account-resolver.cfg
 
-%{if !isHub}
-include ./${leafConf}
-%{endif}
