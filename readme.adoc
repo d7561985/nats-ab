@@ -43,7 +43,6 @@ nats context save sys --server "nats://172.31.20.65:4222,nats://172.31.29.145:42
  nats context save spoke-1 --server "nats://172.31.30.204:4222,nats://172.31.21.18:4222"
 
 nats context save hub --server "nats://172.31.20.65:4222,nats://172.31.29.145:4222,"
-
 ----
 
 check out
@@ -206,7 +205,6 @@ nats bench test --context  hub --js --sub 10 --size 16 --msgs 1000000 --storage=
 ===== B
 [source, bash]
 nats bench test --context  spoke-1 --js --sub 10 --size 16 --msgs 1000000 --storage="memory"
-
 
 == Test1
 

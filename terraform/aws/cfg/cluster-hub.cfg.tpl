@@ -9,53 +9,25 @@ jetstream {
     #max_file: 8G
 }
 
-accounts: {
-    SYS: {
-        users: [
-            {user: ${sys_user}, password: ${sys_psw}}
-        ]
-    }
-  # Service
-    NOTIFICATION = {
-        users = [
-          {user: 'myservice', password: 'myservice'}
-          {user: 'backend', password: 'backend'}
-        ]
-        jetstream = {
-          max_mem: 24M
-          max_file: 1G
-          max_streams: 5
-          max_consumers: 5
-        }
-        exports = [
-          {stream: someTopic1.>}
-        ]
-  }
-  ACC = {
-    users = [
-      {user: ${acc_user}, password: ${acc_psw}}
-    ]
-    jetstream = enabled
-  }
-}
-
-system_account: SYS
-
 cluster {
+    listen 0.0.0.0:4223
+    name ${cluster}
+
+    # if under loadbalancer - true, no balancer = false
+    no_advertise = true
+
     # Authorization for route connections
     # Other server can connect if they supply the credentials listed here
     # This server will connect to discovered routes using this user
     authorization {
-      user: ${cluster_user}
-      password: ${cluster_psw}
+      user: "${cluster_user}"
+      password: "${protocols_pwd}"
       timeout: 0.5
     }
 
-    listen 0.0.0.0:4223
-    name ${cluster}
     routes = [
 %{ for id, hh in nodes ~}
-        nats-route://${cluster_user}:${cluster_psw}@${hh}:4223
+        nats-route://${cluster_user}:${protocols_pwd}@${hh}:4223
 %{ endfor ~}
     ]
 }
@@ -66,12 +38,12 @@ cluster {
 #  port: 7222
 #  authorization {
 #    user: ${gw_user}
-#    password: ${gw_psw}
+#    password: ${protocols_pwd}
 #    timeout: 0.75
 #  }
 #  gateways: [
 #%{ for id, hub in cluster_nodes ~}
-#  {name: "${cluster}", urls: [%{ for hh in hub ~}"nats://${gw_user}:${gw_psw}@${hh}:7222",%{ endfor ~}]},
+#  {name: "${id}", urls: [%{ for hh in hub ~}"nats://${gw_user}:${protocols_pwd}@${hh}:7222",%{ endfor ~}]},
 #%{ endfor ~}
 #  ]
 #}
@@ -80,6 +52,12 @@ mqtt {
     port: 4225
 }
 
-include ./${leafConf}
+# Required TLS configuration
+#websocket{
+#    port: 433
+#}
+
+include ./leaf.conf
+include ./account.conf
 #include ./nats-account-resolver.cfg
 

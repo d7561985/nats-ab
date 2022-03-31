@@ -1,19 +1,35 @@
-variable "sys_user" {
-  type = string
-  default = "demo_user"
+variable "SYS_ADMIN" {
+  default = "sys_admin"
 }
 
-variable "sys_psw" {
-  type = string
-  default = "demo_psw"
+variable "SYS_LEAF" {
+  default = "sys_leaf"
 }
 
-variable "acc_user" {
-  type = string
-  default = "test"
+variable "DOMAIN_CLIENT" {
+  default = "client"
 }
 
-variable "acc_psw" {
-  type = string
-  default = "test"
+variable "DOMAIN_LEAF" {
+  default = "leaf"
+}
+
+variable "DOMAIN_ADMIN" {
+  default = "admin"
+}
+
+variable "DOMAIN_JS_ADMIN" {
+  default = "jetstream_admin"
+}
+
+variable "DOMAIN_PUBLIC" {
+  default = "public"
+}
+
+variable "CLUSTER_USER" {
+  default = "cluster"
+}
+
+variable "GW_USER" {
+  default = "gw"
 }

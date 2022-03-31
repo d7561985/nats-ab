@@ -9,23 +9,45 @@ output "spoke-1-public_ip" {
   value = module.cluster-spoke-1.public_ip
 }
 
-output "context_sys" {
+output "private_context_sys" {
   depends_on = [module.cluster-hub, module.cluster-spoke-1]
   value = <<EOF
-  nats context save sys --user ${var.sys_user} --password ${var.sys_psw} --server "%{~ for i, v in local.allprivate ~}nats://${v}:4222, %{~ endfor ~}"
+  nats context save sys --user ${var.SYS_ADMIN} --password ${random_string.sys.result} --server "%{~ for i, v in local.allprivate ~}nats://${v}:4222, %{~ endfor ~}"
 EOF
 }
 
-output "context_hub" {
+output "private_context_hub" {
   depends_on = [module.cluster-hub]
   value = <<EOF
-  nats context save hub --user ${local.testUser} --password ${local.testPsw} --server "%{~ for i, v in module.cluster-hub.private_ip ~}nats://${v}:4222, %{~ endfor ~}"
+  nats context save hub --user ${var.DOMAIN_CLIENT} --password ${random_string.domain.result} --server "%{~ for i, v in module.cluster-hub.private_ip ~}nats://${v}:4222, %{~ endfor ~}"
 EOF
 }
 
-output "context_spoke_1" {
+output "private_context_spoke_1" {
   depends_on = [module.cluster-spoke-1]
   value = <<EOF
-  nats context save spoke-1 --user ${local.testUser} --password ${local.testPsw} --server "%{~ for i, v in module.cluster-spoke-1.private_ip ~}nats://${v}:4222, %{~ endfor ~}"
+  nats context save spoke-1 --user ${var.DOMAIN_CLIENT} --password ${random_string.domain.result} --server "%{~ for i, v in module.cluster-spoke-1.private_ip ~}nats://${v}:4222, %{~ endfor ~}"
+EOF
+}
+
+output "public_context_sys" {
+  depends_on = [module.cluster-hub, module.cluster-spoke-1]
+  value = <<EOF
+  nats context save sys --user ${var.SYS_ADMIN} --password ${random_string.sys.result} --server "%{~ for i, v in local.allpub ~}nats://${v}:4222, %{~ endfor ~}"
+EOF
+}
+
+output "public_context_hub" {
+  depends_on = [module.cluster-hub]
+  value = <<EOF
+  nats context save hub --user ${var.DOMAIN_CLIENT} --password ${random_string.sys.result} --server "%{~ for i, v in module.cluster-hub.public_ip ~}nats://${v}:4222, %{~ endfor ~}"
+EOF
+}
+
+output "public_context_spoke_1" {
+  depends_on = [module.cluster-spoke-1]
+  sensitive = true
+  value = <<EOF
+  nats context save spoke-1 --user ${var.DOMAIN_CLIENT} --password ${random_string.sys.result} --server "%{~ for i, v in module.cluster-spoke-1.public_ip ~}nats://${v}:4222, %{~ endfor ~}"
 EOF
 }
