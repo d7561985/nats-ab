@@ -1,6 +1,6 @@
 %{if isLeaf}
-SYS-URLS=[%{ for id, hh in hub ~}"nats-leaf://${sys_leaf}:${sys_psw}@${hh}:4224",%{ endfor ~}]
-ACC-URLS=[%{ for id, hh in hub ~}"nats-leaf://${leaf}:${acc_psw}@${hh}:4224",%{ endfor ~}]
+SYS-URLS=[%{ for id, hh in hub ~}"nats-leaf://${sys_leaf}:${sys_psw}@${hh}:7422",%{ endfor ~}]
+ACC-URLS=[%{ for id, hh in hub ~}"nats-leaf://${leaf}:${acc_psw}@${hh}:7422",%{ endfor ~}]
 %{endif}
 
 leafnodes {
@@ -17,6 +17,6 @@ remotes = [
 		},
 	]
 %{ else }
-listen 0.0.0.0:4224
+listen 0.0.0.0:7422
 %{endif}
 }

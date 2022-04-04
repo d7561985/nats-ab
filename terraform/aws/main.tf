@@ -20,7 +20,7 @@ module "cluster-hub" {
   INSTANCE_TYPE = "c5.large"
   SPOT_PRICE    = "0.99"
   names         = ["node1", "node2"]
-  ports         = [4222, 4223, 4224, 4225, 7222, 8080]
+  ports         = [4222, 4223, 7422, 4225, 7222, 8080]
 }
 
 module "cluster-spoke-1" {
@@ -30,7 +30,7 @@ module "cluster-spoke-1" {
   INSTANCE_TYPE = "c5.large"
   SPOT_PRICE    = "0.99"
   names         = ["spoke-1", "spoke-2"]
-  ports         = [4222, 4223, 4224, 4225, 7222, 8080]
+  ports         = [4222, 4223, 7422, 4225, 7222, 8080]
 }
 
 #
