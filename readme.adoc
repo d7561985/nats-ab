@@ -337,3 +337,33 @@ State:
               LastSeq: 500 @ 2022-04-08T13:11:05 UTC
      Active Consumers: 1
 ----
+
+[source]
+----
+Information for Consumer ORDERS > MONITOR created 2022-04-08T13:11:05Z
+
+Configuration:
+
+        Durable Name: MONITOR
+           Pull Mode: true
+      Deliver Policy: All
+          Ack Policy: Explicit
+            Ack Wait: 30s
+       Replay Policy: Instant
+     Max Ack Pending: 20,000
+   Max Waiting Pulls: 512
+
+Cluster Information:
+
+                Name: nats
+              Leader: cluster-nats-0
+
+State:
+
+   Last Delivered Message: Consumer sequence: 100 Stream sequence: 100 Last delivery: 15m44s ago
+     Acknowledgment floor: Consumer sequence: 100 Stream sequence: 100 Last Ack: 15m44s ago
+         Outstanding Acks: 0 out of maximum 20,000
+     Redelivered Messages: 0
+     Unprocessed Messages: 400
+            Waiting Pulls: 0 of maximum 512
+----
