@@ -26,8 +26,8 @@ func main() {
 
 	ctx := l.Ctx()
 
-	_ = createStream(ctx, cfg)
-	//defer closer()
+	closer := createStream(ctx, cfg)
+	defer closer()
 
 	performTest(ctx, cfg)
 }
