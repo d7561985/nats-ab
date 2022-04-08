@@ -298,3 +298,42 @@ Topology: hub: c5.2xlarge x2 leaf: c5.2xlarge  x2
 |Sub stats: 1,159,138 msgs/sec ~ 17.69 MB/sec
 |Sub stats: 1,057,679 msgs/sec ~ 16.14 MB/sec
 |===
+
+
+== Stream
+
+[source]
+----
+Information for Stream ORDERS created 2022-04-08T13:11:05Z
+
+Configuration:
+
+             Subjects: ORDERS.*
+     Acknowledgements: true
+            Retention: File - Limits
+             Replicas: 1
+       Discard Policy: Old
+     Duplicate Window: 2m0s
+    Allows Msg Delete: true
+         Allows Purge: true
+       Allows Rollups: false
+     Maximum Messages: unlimited
+        Maximum Bytes: unlimited
+          Maximum Age: unlimited
+ Maximum Message Size: unlimited
+    Maximum Consumers: unlimited
+
+
+Cluster Information:
+
+                 Name: nats
+               Leader: cluster-nats-0
+
+State:
+
+             Messages: 500
+                Bytes: 47 KiB
+             FirstSeq: 1 @ 2022-04-08T13:11:05 UTC
+              LastSeq: 500 @ 2022-04-08T13:11:05 UTC
+     Active Consumers: 1
+----
