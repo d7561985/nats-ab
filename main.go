@@ -8,6 +8,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/d7561985/nats-ab/internal/config"
 	"github.com/d7561985/tel/v2"
+	_ "github.com/joho/godotenv/autoload"
 	"github.com/nats-io/nats.go"
 )
 
@@ -21,7 +22,7 @@ func main() {
 		log.Fatalf("config loading: %v", err)
 	}
 
-	l, exit := tel.New(context.Background(), tel.DefaultConfig())
+	l, exit := tel.New(context.Background(), tel.DefaultDebugConfig())
 	defer exit()
 
 	ctx := l.Ctx()
@@ -78,6 +79,10 @@ func createStream(ctx context.Context, cfg config.Nats) func() {
 	}
 
 	return func() {
+		<-time.After(cfg.DrainTime)
+
+		l.Info("drain begin")
+
 		// Delete Consumer
 		if err = js.DeleteConsumer(STREAM, CONSUMER); err != nil {
 			l.Fatal("delete consumer", tel.Error(err))
@@ -112,7 +117,7 @@ func performTest(ctx context.Context, cfg config.Nats) {
 	}
 
 	// Simple Async Stream Publisher
-	for i := 0; i < 500; i++ {
+	for i := 0; i < cfg.Count; i++ {
 		// or via js explicitly publish to stream
 		_, err = js.PublishAsync(STREAM+".received", []byte("hello"), nats.ExpectStream("ORDERS"))
 		if err != nil {
@@ -139,19 +144,25 @@ func performTest(ctx context.Context, cfg config.Nats) {
 	// Drain
 	defer sub.Drain()
 
-	msgs, err := sub.Fetch(100, nats.MaxWait(time.Second*30))
-	if err != nil {
-		l.Fatal("fetch", tel.Error(err))
-	}
+	bs := cfg.Count / 100
 
-	if len(msgs) == 0 {
-		l.Fatal("not fetched msgs")
-	}
+	for i := 0; i < bs; i++ {
+		l.Info("batch", tel.Int("n", i))
 
-	for _, msg := range msgs {
-		l.Info(string(msg.Data))
-		if err = msg.Ack(); err != nil {
-			l.Fatal("ack", tel.Error(err))
+		msgs, err := sub.Fetch(100, nats.MaxWait(time.Second*30))
+		if err != nil {
+			l.Fatal("fetch", tel.Error(err))
+		}
+
+		if len(msgs) == 0 {
+			l.Fatal("not fetched msgs")
+		}
+
+		for _, msg := range msgs {
+			l.Info(string(msg.Data))
+			if err = msg.Ack(); err != nil {
+				l.Fatal("ack", tel.Error(err))
+			}
 		}
 	}
 }
