@@ -5,6 +5,7 @@ import "time"
 type Nats struct {
 	Count     int           `env:"PUSH_NUM" envDefault:"1000"`
 	DrainTime time.Duration `env:"DRAIN_TIME" envDefault:"10s"`
+	Replicas  int           `env:"REPLICAS" envDefault:"1"`
 
 	Client struct {
 		User         string `env:"NATS_USER,required"`

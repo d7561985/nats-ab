@@ -63,6 +63,7 @@ func createStream(ctx context.Context, cfg config.Nats) func() {
 	_, err = js.AddStream(&nats.StreamConfig{
 		Name:     STREAM,
 		Subjects: []string{STREAM + ".*"},
+		Replicas: cfg.Replicas,
 	})
 	if err != nil {
 		l.Fatal("create stream", tel.Error(err))
