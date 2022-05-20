@@ -14,9 +14,6 @@ on:
   push:
     tags:
       - 'v*'
-    branches:
-      - master
-      - main
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
