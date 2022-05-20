@@ -139,11 +139,13 @@ func performTest(ctx context.Context, cfg config.Nats) {
 		l.Fatal("pull", tel.Error(err))
 	}
 
-	// Unsubscribe
-	defer sub.Unsubscribe()
+	defer func() {
+		// Drain
+		_ = sub.Drain()
 
-	// Drain
-	defer sub.Drain()
+		// Unsubscribe
+		_ = sub.Unsubscribe()
+	}()
 
 	bs := cfg.Count / 100
 
