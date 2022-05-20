@@ -34,7 +34,7 @@ builds:
         goarch: 'arm'
     binary: '{{ .ProjectName }}_v{{ .Version }}'
 archives:
-  - format: gz
+  - format: tar.gz
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 release:
 # If you want to manually examine the release before its live, uncomment this line:
