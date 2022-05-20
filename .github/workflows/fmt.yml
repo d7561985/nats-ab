@@ -11,9 +11,5 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v2
       with:
-        go-version: '^1.16.4'
-    - uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 0.15.4
+        go-version: '^1.18.1'
     - run: make gofmt-check
-    - run: make tffmt-check
