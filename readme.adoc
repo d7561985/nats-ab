@@ -9,6 +9,36 @@ SLO:
 * `NATS_USER` - can send and read messages via JS
 
 
+== How to use
+CLI support help command where you will find everything suitable:
+[bash]
+----
+NAME:
+   <help name> - run compliance scenario tests
+
+USAGE:
+   <usage text>
+
+DESCRIPTION:
+   <description>
+
+OPTIONS:
+   --mode value                          Some scenarios required 2 or more applications launches (between leaf nodes), value: 0: send and receive, 1: only send, 2: only receive (default: 0) [$MODE]
+   --count value                         messages to publish/receive (default: 1000000) [$MSG_NUM]
+   --msgSize value                       messages to publish/receive (default: 128) [$MSG_SIZE]
+   --threads value                       consent execution (default: 5) [$THREADS]
+   --drainTime value                     wait before clean up after scenario (default: 30s) [$DRAIN_TIME]
+   --addr value                          NATS URI list (default: "nats://127.0.0.1:4222") [$NATS_ADDR]
+   --replicas value                      stream reapplication usage (default: 1) [$REPLICAS]
+   --accUser value, -u value             none sys account user who will send or read messages (default: "client") [$ACC_USER]
+   --accUserPassword value, -p value     password for accUser (default: ****) [$ACC_USER_PASSWORD]
+   --accAdmin value, -a value            none sys account user admin with no restriction (default: "admin") [$ACC_ADMIN]
+   --accAdminPassword value, --ap value  password for accAdmin (default: ****) [$ACC_ADMIN_PASSWORD]
+   --sysUser value                       sys account user [$SYS_USER]
+   --sysPassword value                   sysUser password (default: ****) [$SYS_USER_PASSWORD]
+   --help, -h                            show help (default: false)
+----
+
 == TEST
 === Scenario #1
 Positive test.

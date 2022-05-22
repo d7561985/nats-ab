@@ -3,24 +3,22 @@ package config
 import "time"
 
 type Nats struct {
-	Count     int           `env:"PUSH_NUM" envDefault:"1000"`
-	DrainTime time.Duration `env:"DRAIN_TIME" envDefault:"10s"`
-	Replicas  int           `env:"REPLICAS" envDefault:"1"`
+	Mode int
 
-	Client struct {
-		User         string `env:"NATS_USER,required"`
-		UserPassword string `env:"NATS_PASSWORD,required"`
-	}
+	Addr string
 
-	StreamAdmin struct {
-		User         string `env:"NATS_STREAM_USER,required"`
-		UserPassword string `env:"NATS_STREAM_PASSWORD,required"`
-	}
+	DrainTime time.Duration
+	Count     int
+	MsgSize   int
+	Replicas  int
+	Threads   int
 
-	SysAdmin struct {
-		User         string `env:"NATS_SYS_USER"`
-		UserPassword string `env:"NATS_SYS_PASSWORD"`
-	}
+	Client      Cred
+	StreamAdmin Cred
+	SysAdmin    Cred
+}
 
-	Addr string `env:"NATS_ADDR,required"`
+type Cred struct {
+	User         string
+	UserPassword string
 }
