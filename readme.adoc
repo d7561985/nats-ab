@@ -8,19 +8,6 @@ SLO:
 * `NATS_STREAM_USER` - this user applicable for create JS as user in GitOps job
 * `NATS_USER` - can send and read messages via JS
 
-
-== Use-cases
-=== mode
-To check leaf: put mode = 1 in hub cluster and 2 in leaf.
-
-NOTE: first create leaf subscriber
-
-=== replica
-Check performance with different replica value in cluster
-
-=== threads
-Examine number of threads (services) producers or consumer.
-
 == Install
 === download
 https://github.com/d7561985/nats-ab/releases
@@ -37,6 +24,19 @@ Go version < 1.16
 ----
 go get -u github.com/d7561985/nats-ab@latest
 ----
+
+== Use-cases
+=== mode
+To check leaf: put mode = 1 in hub cluster and 2 in leaf.
+
+NOTE: first create leaf subscriber
+
+=== replica
+Check performance with different replica value in cluster
+
+=== threads
+Examine number of threads (services) producers or consumer.
+
 
 == How to use
 CLI support help command where you will find everything suitable:
