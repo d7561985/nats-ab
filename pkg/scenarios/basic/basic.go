@@ -239,7 +239,7 @@ func (b *basic) performTest(ctx context.Context) {
 
 func (b *basic) saveCSV() {
 	csv := b.benchmark.CSV()
-	ioutil.WriteFile("report.csv", []byte(csv), 0644)
+	_ = ioutil.WriteFile("report.csv", []byte(csv), 0644)
 	fmt.Printf("Saved metric data in csv file %s\n", "report.csv")
 }
 

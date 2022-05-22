@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/d7561985/tel/v2"
 	"github.com/urfave/cli/v2"
@@ -23,7 +24,7 @@ func Run() {
 
 	go func() {
 		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Kill, os.Interrupt)
+		signal.Notify(c, syscall.SIGTERM, os.Interrupt)
 		<-c
 		cancel()
 	}()
