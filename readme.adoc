@@ -21,6 +21,23 @@ Check performance with different replica value in cluster
 === threads
 Examine number of threads (services) producers or consumer.
 
+== Install
+=== download
+https://github.com/d7561985/nats-ab/releases
+
+=== golang
+Go 1.16+
+[bash]
+----
+go install github.com/d7561985/nats-ab@latest
+----
+
+Go version < 1.16
+[bash]
+----
+go get -u github.com/d7561985/nats-ab@latest
+----
+
 == How to use
 CLI support help command where you will find everything suitable:
 [bash]
