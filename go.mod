@@ -8,7 +8,7 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/nats-io/nats.go v1.15.0
 	github.com/pkg/errors v0.9.1
-	github.com/urfave/cli/v2 v2.7.1
+	github.com/urfave/cli/v2 v2.8.0
 	golang.org/x/text v0.3.7
 )
 
