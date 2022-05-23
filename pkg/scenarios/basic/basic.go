@@ -48,7 +48,7 @@ func createStream(ctx context.Context, cfg config.Nats) func() {
 	}
 
 	if len(cfg.SysAdmin.User) > 0 {
-		opts = append(opts, nats.UserInfo(cfg.SysAdmin.User, cfg.SysAdmin.UserPassword))
+		opts = append(opts, nats.UserInfo(cfg.StreamAdmin.User, cfg.StreamAdmin.UserPassword))
 	}
 
 	nc, err := nats.Connect(cfg.Addr, opts...)
