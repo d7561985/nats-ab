@@ -1,0 +1,17 @@
+== how to
+
+Run NATS cli inside cluster
+[bash]
+----
+$ kubectl run -it --rm cli --image natsio/nats-box:0.8.1
+----
+
+download release `nats-ab` and unpack
+[bash]
+----
+$ wget https://github.com/d7561985/nats-ab/releases/download/v1.1.0/nats-ab_1.1.0_linux_amd64.tar.gz
+
+$ tar -xvzf nats-ab_1.1.0_linux_amd64.tar.gz
+----
+
+opt. fill `.env` file in working dir or use flags inside program.

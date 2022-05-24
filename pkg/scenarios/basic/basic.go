@@ -47,7 +47,7 @@ func createStream(ctx context.Context, cfg config.Nats) func() {
 		nats.DrainTimeout(DrainTimeOut),
 	}
 
-	if len(cfg.SysAdmin.User) > 0 {
+	if len(cfg.StreamAdmin.User) > 0 {
 		opts = append(opts, nats.UserInfo(cfg.StreamAdmin.User, cfg.StreamAdmin.UserPassword))
 	}
 
