@@ -23,8 +23,9 @@ const (
 )
 
 const (
-	STREAM   = "ORDERS"
-	CONSUMER = "MONITOR"
+	STREAM                = "ORDERS"
+	CONSUMER              = "MONITOR"
+	SYSTEM_PHASER_SUBJECT = "COMPLIANCE_PHASE"
 )
 
 func Run(ctx context.Context, cfg config.Nats) {
@@ -106,7 +107,8 @@ type basic struct {
 	numSubs   int
 	numPubs   int
 
-	totalMsg uint64
+	subTotalMsg uint64
+	pubTotalMsg uint64
 }
 
 func Create(cfg config.Nats) *basic {
@@ -167,7 +169,6 @@ func (b *basic) performTest(ctx context.Context) {
 		go b.runSubscriber(ctx, nc, STREAM+".received",
 			&startwg, &donewg, b.cfg.Count, b.cfg.MsgSize)
 	}
-	startwg.Wait()
 
 	// Now Publishers
 	startwg.Add(b.numPubs)
@@ -189,12 +190,15 @@ func (b *basic) performTest(ctx context.Context) {
 	msg := message.NewPrinter(language.AmericanEnglish)
 
 	go func() {
-		fmt.Println("in progress")
+		l.Info("in progress")
 
 		x := time.After(time.Second * 30)
 
 		for {
 			select {
+			case <-ctx.Done():
+				l.Info("worker exit")
+				return
 			case <-done:
 				return
 			case <-time.After(time.Second * 5):
@@ -202,7 +206,7 @@ func (b *basic) performTest(ctx context.Context) {
 			case <-x:
 				x = time.After(time.Second * 30)
 
-				print(msg.Sprintf("%d", b.totalMsg))
+				print(msg.Sprintf("sub: %d, pub: %d", b.subTotalMsg, b.pubTotalMsg))
 
 				if b.benchmark.Pubs.HasSamples() {
 					fmt.Println(b.benchmark.Pubs.Statistics())
@@ -246,6 +250,12 @@ func (b *basic) saveCSV() {
 func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
 	l := tel.FromCtx(ctx)
 
+	if err := nc.Publish(SYSTEM_PHASER_SUBJECT, []byte(subj)); err != nil {
+		l.Fatal("send start phase", tel.Error(err))
+	}
+
+	l.Info("sent", tel.String("sub", SYSTEM_PHASER_SUBJECT))
+
 	startwg.Done()
 
 	var msg []byte
@@ -268,6 +278,8 @@ func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, st
 		}
 	}
 
+	atomic.AddUint64(&b.pubTotalMsg, uint64(numMsgs))
+
 	_ = nc.Flush()
 	b.benchmark.AddPubSample(bench.NewSample(numMsgs, msgSize, start, time.Now(), nc))
 	nc.Close()
@@ -277,6 +289,20 @@ func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, st
 
 func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
 	l := tel.FromCtx(ctx)
+
+	cn := make(chan *nats.Msg, 1)
+	subscribe, err := nc.ChanSubscribe(SYSTEM_PHASER_SUBJECT, cn)
+	if err != nil {
+		l.Fatal("get phase", tel.Error(err))
+	}
+
+	l.Info("wait", tel.String("sub", SYSTEM_PHASER_SUBJECT))
+
+	<-cn
+	_ = subscribe.Drain()
+	_ = subscribe.Unsubscribe()
+
+	l.Info("got", tel.String("sub", SYSTEM_PHASER_SUBJECT))
 
 	js, err := nc.JetStream(nats.PublishAsyncMaxPending(256))
 	if err != nil {
@@ -305,8 +331,22 @@ func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, s
 	//sub.SetPendingLimits(-1, -1)
 	//nc.Flush()
 	startwg.Done()
+	defer nc.Close()
+	defer donewg.Done()
 
 	for {
+		select {
+		case <-ctx.Done():
+			l.Info("worker exit")
+			return
+		default:
+		}
+
+		if received >= numMsgs || uint64(b.cfg.Threads*b.cfg.Count) <= atomic.LoadUint64(&b.subTotalMsg) {
+			end = time.Now()
+			break
+		}
+
 		msgs, err := sub.Fetch(100, nats.MaxWait(time.Second*30))
 		if err != nil {
 			l.Error("fetch", tel.Error(err))
@@ -329,17 +369,11 @@ func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, s
 			}
 		}
 
-		atomic.AddUint64(&b.totalMsg, uint64(len(msgs)))
-
-		if received >= numMsgs || uint64(b.cfg.Threads*b.cfg.Count) <= atomic.LoadUint64(&b.totalMsg) {
-			end = time.Now()
-			break
-		}
+		atomic.AddUint64(&b.subTotalMsg, uint64(len(msgs)))
 	}
 
-	//println("EXIT", received, uint64(b.cfg.Threads*b.cfg.Count), atomic.LoadUint64(&b.totalMsg))
+	//println("EXIT", received, uint64(b.cfg.Threads*b.cfg.Count), atomic.LoadUint64(&b.subTotalMsg))
 
 	b.benchmark.AddSubSample(bench.NewSample(received, msgSize, start, end, nc))
-	nc.Close()
-	donewg.Done()
+
 }
