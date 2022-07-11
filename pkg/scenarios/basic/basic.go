@@ -14,6 +14,7 @@ import (
 	"github.com/d7561985/tel/v2"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/bench"
+	"github.com/pkg/errors"
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -23,9 +24,10 @@ const (
 )
 
 const (
-	STREAM                = "ORDERS"
-	CONSUMER              = "MONITOR"
-	SYSTEM_PHASER_SUBJECT = "COMPLIANCE_PHASE"
+	STREAM                    = "ORDERS"
+	CONSUMER                  = "MONITOR"
+	SYSTEM_PHASER_PUB_SUBJECT = "COMPLIANCE_PHASE_PUB"
+	SYSTEM_PHASER_SUB_SUBJECT = "COMPLIANCE_PHASE_SUB"
 )
 
 func Run(ctx context.Context, cfg config.Nats) {
@@ -248,13 +250,13 @@ func (b *basic) saveCSV() {
 }
 
 func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
-	l := tel.FromCtx(ctx)
+	l := tel.FromCtx(ctx).Copy()
 
-	if err := nc.Publish(SYSTEM_PHASER_SUBJECT, []byte(subj)); err != nil {
-		l.Fatal("send start phase", tel.Error(err))
+	if err := getLock(ctx, nc, SYSTEM_PHASER_SUB_SUBJECT, SYSTEM_PHASER_PUB_SUBJECT); err != nil {
+		l.Fatal("lock error", tel.String("sub", SYSTEM_PHASER_SUB_SUBJECT), tel.Error(err))
 	}
 
-	l.Info("sent", tel.String("sub", SYSTEM_PHASER_SUBJECT))
+	l.Info("done", tel.String("sub", SYSTEM_PHASER_SUB_SUBJECT), tel.String("send", SYSTEM_PHASER_PUB_SUBJECT))
 
 	startwg.Done()
 
@@ -290,20 +292,6 @@ func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, st
 func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
 	l := tel.FromCtx(ctx)
 
-	cn := make(chan *nats.Msg, 1)
-	subscribe, err := nc.ChanSubscribe(SYSTEM_PHASER_SUBJECT, cn)
-	if err != nil {
-		l.Fatal("get phase", tel.Error(err))
-	}
-
-	l.Info("wait", tel.String("sub", SYSTEM_PHASER_SUBJECT))
-
-	<-cn
-	_ = subscribe.Drain()
-	_ = subscribe.Unsubscribe()
-
-	l.Info("got", tel.String("sub", SYSTEM_PHASER_SUBJECT))
-
 	js, err := nc.JetStream(nats.PublishAsyncMaxPending(256))
 	if err != nil {
 		l.Fatal("JS", tel.String("context", "js context creation"), tel.Error(err))
@@ -314,6 +302,12 @@ func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, s
 	if err != nil {
 		l.Fatal("pull", tel.Error(err))
 	}
+
+	if err = getLock(ctx, nc, SYSTEM_PHASER_PUB_SUBJECT, SYSTEM_PHASER_SUB_SUBJECT); err != nil {
+		l.Fatal("lock error", tel.String("sub", SYSTEM_PHASER_PUB_SUBJECT), tel.Error(err))
+	}
+
+	l.Info("done", tel.String("sub", SYSTEM_PHASER_PUB_SUBJECT), tel.String("send", SYSTEM_PHASER_SUB_SUBJECT))
 
 	defer func() {
 		// Drain
@@ -376,4 +370,47 @@ func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, s
 
 	b.benchmark.AddSubSample(bench.NewSample(received, msgSize, start, end, nc))
 
+}
+
+// getLock check if something come on provided subject, only 1 message
+func getLock(ctx context.Context, nc *nats.Conn, sub, pub string) error {
+	tel.FromCtx(ctx).Info("enter distributed lock stage")
+
+	done := make(chan struct{}, 1)
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-done:
+				if err := nc.Publish(pub, nil); err != nil {
+					tel.FromCtx(ctx).Warn("pub", tel.Error(err), tel.String("subject", pub))
+				}
+				return
+			case <-time.After(time.Second):
+				if err := nc.Publish(pub, nil); err != nil {
+					tel.FromCtx(ctx).Warn("pub", tel.Error(err), tel.String("subject", pub))
+				}
+			}
+		}
+	}()
+
+	cn := make(chan *nats.Msg, 1)
+	subscribe, err := nc.ChanSubscribe(sub, cn)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+
+	defer func() {
+		_ = subscribe.Drain()
+		_ = subscribe.Unsubscribe()
+		done <- struct{}{}
+	}()
+
+	select {
+	case <-cn:
+		return nil
+	case <-ctx.Done():
+		return errors.WithStack(fmt.Errorf("ctx timeout"))
+	}
 }
