@@ -18,6 +18,8 @@ type Nats struct {
 	Client      Cred
 	StreamAdmin Cred
 	SysAdmin    Cred
+
+	CreateStream bool
 }
 
 type Cred struct {

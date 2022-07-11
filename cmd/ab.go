@@ -27,6 +27,7 @@ const (
 	sysUser          = "sysUser"
 	sysPassword      = "sysPassword"
 	msgSize          = "msgSize"
+	createStream     = "createStream"
 
 	mode = "mode"
 )
@@ -120,6 +121,13 @@ func (a *ab) Command() *cli.Command {
 				Usage:       "sysUser password",
 				EnvVars:     []string{"SYS_USER_PASSWORD"},
 			},
+			&cli.BoolFlag{
+				Name:    createStream,
+				Value:   true,
+				Usage:   "is not need to create stream",
+				EnvVars: []string{"CREATE_STREAM"},
+				Aliases: []string{"cs"},
+			},
 		},
 		HelpName: "<help name>",
 	}
@@ -146,7 +154,8 @@ func (a *ab) handler() func(c *cli.Context) error {
 				User:         c.String(sysUser),
 				UserPassword: c.String(sysPassword),
 			},
-			Mode: c.Int(mode),
+			Mode:         c.Int(mode),
+			CreateStream: c.Bool(createStream),
 		}
 
 		if err := env.Parse(&cfg); err != nil {

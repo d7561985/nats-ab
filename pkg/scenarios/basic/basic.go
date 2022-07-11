@@ -24,10 +24,10 @@ const (
 )
 
 const (
-	STREAM                    = "ORDERS"
-	CONSUMER                  = "MONITOR"
-	SYSTEM_PHASER_PUB_SUBJECT = "COMPLIANCE_PHASE_PUB"
-	SYSTEM_PHASER_SUB_SUBJECT = "COMPLIANCE_PHASE_SUB"
+	STREAM                 = "ORDERS"
+	CONSUMER               = "MONITOR"
+	SystemPhaserPubSubject = "COMPLIANCE_PHASE_PUB"
+	SystemPhaserSubSubject = "COMPLIANCE_PHASE_SUB"
 )
 
 func Run(ctx context.Context, cfg config.Nats) {
@@ -65,41 +65,46 @@ func createStream(ctx context.Context, cfg config.Nats) func() {
 		l.Fatal("JS", tel.String("context", "js context creation"), tel.Error(err))
 	}
 
-	// Create a Stream
-	_, err = js.AddStream(&nats.StreamConfig{
-		Name:     STREAM,
-		Subjects: []string{STREAM + ".*"},
-		Replicas: cfg.Replicas,
-	})
-	if err != nil {
-		l.Fatal("create stream", tel.Error(err))
-	}
+	cb := func() {}
 
-	// Create a Consumer
-	_, err = js.AddConsumer(STREAM, &nats.ConsumerConfig{
-		Durable:   CONSUMER,
-		AckPolicy: nats.AckExplicitPolicy,
-	})
-
-	if err != nil {
-		l.Fatal("create consumer", tel.Error(err))
-	}
-
-	return func() {
-		<-time.After(cfg.DrainTime)
-
-		l.Info("drain begin")
-
-		// Delete Consumer
-		if err = js.DeleteConsumer(STREAM, CONSUMER); err != nil {
-			l.Fatal("delete consumer", tel.Error(err))
+	if cfg.CreateStream {
+		// Create a Stream
+		_, err = js.AddStream(&nats.StreamConfig{
+			Name:     STREAM,
+			Subjects: []string{STREAM + ".*"},
+			Replicas: cfg.Replicas,
+		})
+		if err != nil {
+			l.Fatal("create stream", tel.Error(err))
 		}
 
-		// Delete Stream
-		if err = js.DeleteStream(STREAM); err != nil {
-			l.Fatal("delete stream", tel.Error(err))
+		// Create a Consumer
+		_, err = js.AddConsumer(STREAM, &nats.ConsumerConfig{
+			Durable:   CONSUMER,
+			AckPolicy: nats.AckExplicitPolicy,
+		})
+
+		if err != nil {
+			l.Fatal("create consumer", tel.Error(err))
+		}
+
+		cb = func() {
+			l.Info("drain begin")
+			<-time.After(cfg.DrainTime)
+
+			// Delete Consumer
+			if err = js.DeleteConsumer(STREAM, CONSUMER); err != nil {
+				l.Fatal("delete consumer", tel.Error(err))
+			}
+
+			// Delete Stream
+			if err = js.DeleteStream(STREAM); err != nil {
+				l.Fatal("delete stream", tel.Error(err))
+			}
 		}
 	}
+
+	return cb
 }
 
 type basic struct {
@@ -231,10 +236,10 @@ func (b *basic) performTest(ctx context.Context) {
 	tb := tabwriter.NewWriter(os.Stdout, 0, 8, 2, ' ', 0)
 	_, _ = msg.Fprintf(tb, "\nREPORT\n\nhost:\t%s\n", host)
 	_, _ = msg.Fprintf(tb, "mode:\t%d\n", b.cfg.Mode)
-	_, _ = msg.Fprintf(tb, "replicas\tmsg\tmsgSize\tpubs\tsubs\n")
-	_, _ = msg.Fprintf(tb, "%s\t%s\t%s\t%s\t%s\t\n", "-----", "-----", "-----", "-----", "-----")
-	_, _ = msg.Fprintf(tb, "%d\t%d\t%d\t%d\t%d\n", b.cfg.Replicas, b.cfg.Count, b.cfg.MsgSize, b.numPubs, b.numSubs)
-	_, _ = msg.Fprintf(tb, "%s\t%s\t%s\t%s\t%s\t\n", "-----", "-----", "-----", "-----", "-----")
+	_, _ = msg.Fprintf(tb, "replicas\tmsg\tmsgSize\tpubs\tsubs\tcreateStream\n")
+	_, _ = msg.Fprintf(tb, "%s\t%s\t%s\t%s\t%s\t%s\n", "-----", "-----", "-----", "-----", "-----", "-----")
+	_, _ = msg.Fprintf(tb, "%d\t%d\t%d\t%d\t%d\t%t\n", b.cfg.Replicas, b.cfg.Count, b.cfg.MsgSize, b.numPubs, b.numSubs, b.cfg.CreateStream)
+	_, _ = msg.Fprintf(tb, "%s\t%s\t%s\t%s\t%s\t%s\n", "-----", "-----", "-----", "-----", "-----", "-----")
 
 	_, _ = msg.Fprintf(tb, b.benchmark.Report())
 	_ = tb.Flush()
@@ -252,11 +257,11 @@ func (b *basic) saveCSV() {
 func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, startwg, donewg *sync.WaitGroup, numMsgs int, msgSize int) {
 	l := tel.FromCtx(ctx).Copy()
 
-	if err := getLock(ctx, nc, SYSTEM_PHASER_SUB_SUBJECT, SYSTEM_PHASER_PUB_SUBJECT); err != nil {
-		l.Fatal("lock error", tel.String("sub", SYSTEM_PHASER_SUB_SUBJECT), tel.Error(err))
+	if err := getLock(ctx, nc, SystemPhaserSubSubject, SystemPhaserPubSubject); err != nil {
+		l.Fatal("lock error", tel.String("sub", SystemPhaserSubSubject), tel.Error(err))
 	}
 
-	l.Info("done", tel.String("sub", SYSTEM_PHASER_SUB_SUBJECT), tel.String("send", SYSTEM_PHASER_PUB_SUBJECT))
+	l.Info("done", tel.String("sub", SystemPhaserSubSubject), tel.String("send", SystemPhaserPubSubject))
 
 	startwg.Done()
 
@@ -303,11 +308,11 @@ func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, s
 		l.Fatal("pull", tel.Error(err))
 	}
 
-	if err = getLock(ctx, nc, SYSTEM_PHASER_PUB_SUBJECT, SYSTEM_PHASER_SUB_SUBJECT); err != nil {
-		l.Fatal("lock error", tel.String("sub", SYSTEM_PHASER_PUB_SUBJECT), tel.Error(err))
+	if err = getLock(ctx, nc, SystemPhaserPubSubject, SystemPhaserSubSubject); err != nil {
+		l.Fatal("lock error", tel.String("sub", SystemPhaserPubSubject), tel.Error(err))
 	}
 
-	l.Info("done", tel.String("sub", SYSTEM_PHASER_PUB_SUBJECT), tel.String("send", SYSTEM_PHASER_SUB_SUBJECT))
+	l.Info("done", tel.String("sub", SystemPhaserPubSubject), tel.String("send", SystemPhaserSubSubject))
 
 	defer func() {
 		// Drain
@@ -343,7 +348,10 @@ func (b *basic) runSubscriber(ctx context.Context, nc *nats.Conn, subj string, s
 
 		msgs, err := sub.Fetch(100, nats.MaxWait(time.Second*30))
 		if err != nil {
-			l.Error("fetch", tel.Error(err))
+			if err != nats.ErrTimeout {
+				l.Error("fetch", tel.Error(err))
+			}
+
 			continue
 		}
 
