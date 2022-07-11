@@ -1,3 +1,7 @@
+# v1.2.2
+* Fix pub counter
+* Publish not any more fatal on timeout error: add retry approach + retry it
+
 # v1.2.1
 * Mutual distributed lock
 * Disable stream creation flag option

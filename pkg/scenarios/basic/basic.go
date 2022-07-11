@@ -279,13 +279,17 @@ func (b *basic) runPublisher(ctx context.Context, nc *nats.Conn, subj string, st
 
 	for i := 0; i < numMsgs; i++ {
 		// or via js explicitly publish to stream
-		_, err = js.Publish(subj, msg, nats.ExpectStream(STREAM))
-		if err != nil {
-			l.Fatal("publish", tel.Error(err))
-		}
-	}
+		_, err = js.Publish(subj, msg, nats.ExpectStream(STREAM),
+			nats.RetryAttempts(3), nats.RetryWait(time.Second*5))
 
-	atomic.AddUint64(&b.pubTotalMsg, uint64(numMsgs))
+		if err != nil {
+			l.Error("publish", tel.Error(err))
+			i--
+			continue
+		}
+
+		atomic.AddUint64(&b.pubTotalMsg, 1)
+	}
 
 	_ = nc.Flush()
 	b.benchmark.AddPubSample(bench.NewSample(numMsgs, msgSize, start, time.Now(), nc))
