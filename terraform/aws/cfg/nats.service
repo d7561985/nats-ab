@@ -1,0 +1,18 @@
+[Unit]
+Description="NATS"
+Documentation=https://www.nats.io/
+Requires=network-online.target
+After=network-online.target
+ConditionFileNotEmpty=/home/ec2-user/cluster-hub.conf
+
+[Service]
+WorkingDirectory=/home/ec2-user
+User=ec2-user
+Group=ec2-user
+ExecStart=/usr/bin/nats-server -c=/home/ec2-user/cluster-hub.conf
+Restart=always
+OOMScoreAdjust=-999
+LimitNOFILE=64000
+
+[Install]
+WantedBy=multi-user.target

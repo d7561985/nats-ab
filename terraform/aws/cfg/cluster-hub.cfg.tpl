@@ -53,10 +53,10 @@ mqtt {
 }
 
 # Required TLS configuration
-websocket{
-    port: 433
-    no_tls: true
-}
+#websocket{
+#    port: 433
+#    no_tls: true
+#}
 
 include ./leaf.conf
 include ./account.conf

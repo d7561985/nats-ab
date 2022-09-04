@@ -19,7 +19,7 @@ module "cluster-hub" {
 
   INSTANCE_TYPE = "c5.large"
   SPOT_PRICE    = "0.99"
-  names         = ["node1", "node2"]
+  names         = ["node1", "node2", "node3"]
   ports         = [4222, 4223, 7422, 4225, 7222, 8080]
 }
 
@@ -29,7 +29,7 @@ module "cluster-spoke-1" {
 
   INSTANCE_TYPE = "c5.large"
   SPOT_PRICE    = "0.99"
-  names         = ["spoke-1", "spoke-2"]
+  names         = ["spoke-1", "spoke-2", "spoke-3"]
   ports         = [4222, 4223, 7422, 4225, 7222, 8080]
 }
 
@@ -88,16 +88,26 @@ resource "null_resource" "upload-hub" {
   provisioner "file" {
     destination = "/home/ec2-user/account.conf"
     content     = templatefile("${path.module}/cfg/account.cfg.tpl", {
-      sys_user: var.SYS_ADMIN,
+      sys_user : var.SYS_ADMIN,
       sys_leaf : var.SYS_LEAF,
-      js_admin: var.DOMAIN_JS_ADMIN,
-      admin: var.DOMAIN_ADMIN,
-      client: var.DOMAIN_CLIENT,
-      public: var.DOMAIN_PUBLIC,
+      js_admin : var.DOMAIN_JS_ADMIN,
+      admin : var.DOMAIN_ADMIN,
+      client : var.DOMAIN_CLIENT,
+      public : var.DOMAIN_PUBLIC,
       acc_psw : random_string.domain.result,
       sys_psw : random_string.sys.result,
       leaf : var.DOMAIN_LEAF,
     })
+  }
+
+  provisioner "file" {
+    destination = "/etc/systemd/system/nats.service"
+    content     = templatefile("${path.module}/cfg/nats.service", {
+    })
+  }
+
+  provisioner "remote-exec" {
+    inline = ["sudo systemctl restart nats"]
   }
 
   #  provisioner "remote-exec" {
@@ -148,16 +158,26 @@ resource "null_resource" "upload-leaf" {
   provisioner "file" {
     destination = "/home/ec2-user/account.conf"
     content     = templatefile("${path.module}/cfg/account.cfg.tpl", {
-      sys_user: var.SYS_ADMIN,
+      sys_user : var.SYS_ADMIN,
       sys_leaf : var.SYS_LEAF,
-      js_admin: var.DOMAIN_JS_ADMIN,
-      admin: var.DOMAIN_ADMIN,
-      client: var.DOMAIN_CLIENT,
-      public: var.DOMAIN_PUBLIC,
+      js_admin : var.DOMAIN_JS_ADMIN,
+      admin : var.DOMAIN_ADMIN,
+      client : var.DOMAIN_CLIENT,
+      public : var.DOMAIN_PUBLIC,
       acc_psw : random_string.domain.result,
       sys_psw : random_string.sys.result,
       leaf : var.DOMAIN_LEAF,
     })
+  }
+
+  provisioner "file" {
+    destination = "/etc/systemd/system/nats.service"
+    content     = templatefile("${path.module}/cfg/nats.service", {
+    })
+  }
+
+  provisioner "remote-exec" {
+    inline = ["sudo systemctl restart nats"]
   }
 
   // why not started?
@@ -169,16 +189,16 @@ resource "null_resource" "upload-leaf" {
 }
 
 resource "random_string" "protocols" {
-  length           = 16
-  special          = false
+  length  = 16
+  special = false
 }
 
 resource "random_string" "sys" {
-  length           = 16
-  special          = false
+  length  = 16
+  special = false
 }
 
 resource "random_string" "domain" {
-  length           = 16
-  special          = false
+  length  = 16
+  special = false
 }

@@ -118,7 +118,7 @@ resource "aws_instance" "instance" {
 
   root_block_device {
     volume_size = 8
-    volume_type = "gp2"
+    volume_type = "gp3"
     #    iops        = 16000
     #    throughput  = 250
   }
