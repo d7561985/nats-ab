@@ -29,9 +29,11 @@ resource "null_resource" "upload-hub" {
     content     = templatefile("${path.module}/cfg/leaf.cfg.tpl", {
       isLeaf : var.leaf,
       hub : var.hub,
-      leaf : var.SYS_LEAF,
-      sys_leaf : var.DOMAIN_LEAF,
+
+      sys_leaf : var.SYS_LEAF,
       sys_psw : var.sys_psw,
+
+      leaf : var.DOMAIN_LEAF,
       acc_psw : var.acc_psw,
     })
   }
@@ -40,14 +42,17 @@ resource "null_resource" "upload-hub" {
     destination = "/home/ec2-user/account.conf"
     content     = templatefile("${path.module}/cfg/account.cfg.tpl", {
       sys_user : var.SYS_ADMIN,
-      sys_leaf : var.SYS_LEAF,
       js_admin : var.DOMAIN_JS_ADMIN,
       admin : var.DOMAIN_ADMIN,
       client : var.DOMAIN_CLIENT,
+
       public : var.DOMAIN_PUBLIC,
-      acc_psw : var.acc_psw,
+
+      sys_leaf : var.SYS_LEAF,
       sys_psw : var.sys_psw,
+
       leaf : var.DOMAIN_LEAF,
+      acc_psw : var.acc_psw,
     })
   }
 

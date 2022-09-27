@@ -1,15 +1,15 @@
 accounts: {
     SYS: {
         users: [
-            {user: ${sys_user}, password: ${sys_psw}}
-            {user: ${sys_leaf}, password: ${sys_psw}, allowed_connection_types: ["LEAFNODE"]}
+            {user: ${sys_user}, password: '${sys_psw}'}
+            {user: ${sys_leaf}, password: '${sys_psw}', allowed_connection_types: ["LEAFNODE"]}
         ]
     }
   # Service
     NOTIFICATION = {
         users = [
-          {user: 'myservice', password: ${acc_psw}}
-          {user: 'backend', password: ${acc_psw}}
+          {user: 'myservice', password: '${acc_psw}'}
+          {user: 'backend', password: '${acc_psw}'}
         ]
         jetstream = {
           max_mem: 24M
