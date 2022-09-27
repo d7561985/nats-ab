@@ -1,3 +1,6 @@
+# v1.2.3
+* Aws terraform fix numerous problems with first deployment + use more reporoducible deployment.
+
 # v1.2.2
 * Fix pub counter
 * Publish not any more fatal on timeout error: add retry approach + retry it
