@@ -3,7 +3,7 @@ Description="NATS"
 Documentation=https://www.nats.io/
 Requires=network-online.target
 After=network-online.target
-ConditionFileNotEmpty=/home/ec2-user/cluster-hub.conf
+ConditionFileNotEmpty=/home/ec2-user/server.conf
 
 [Service]
 WorkingDirectory=/home/ec2-user

@@ -9,7 +9,7 @@ sudo  cp nats-server/nats-server-$VERSION-linux-amd64/nats-server /usr/bin
 
 curl -L https://github.com/nats-io/natscli/releases/download/v$CLI_VERSION/nats-$CLI_VERSION-linux-amd64.zip -o natscli.zip
 unzip natscli.zip -d natscli
-sudo  cp natscli/nats-0.0.29-linux-amd64/nats /usr/bin
+sudo  cp natscli/nats-${CLI_VERSION}-linux-amd64/nats /usr/bin
 
 curl -L https://github.com/nats-io/nats-top/releases/download/v${TOP_VERSION}/nats-top_${TOP_VERSION}_darwin_amd64.tar.gz -o top.tar.gz
 tar -xvf top.tar.gz
