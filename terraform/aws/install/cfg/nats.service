@@ -9,7 +9,7 @@ ConditionFileNotEmpty=/home/ec2-user/cluster-hub.conf
 WorkingDirectory=/home/ec2-user
 User=ec2-user
 Group=ec2-user
-ExecStart=/usr/bin/nats-server -c=/home/ec2-user/cluster-hub.conf
+ExecStart=/usr/bin/nats-server -c=/home/ec2-user/server.conf
 Restart=always
 OOMScoreAdjust=-999
 LimitNOFILE=64000

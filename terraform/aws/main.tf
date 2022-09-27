@@ -17,9 +17,9 @@ module "cluster-hub" {
 
   ENVIRONMENT = "hub"
 
-  INSTANCE_TYPE = "c5.large"
+  INSTANCE_TYPE = "t3.medium"
   SPOT_PRICE    = "0.99"
-  names         = ["node1", "node2", "node3"]
+  names         = ["node1", "node2"]
   ports         = [4222, 4223, 7422, 4225, 7222, 8080]
 }
 
@@ -27,9 +27,19 @@ module "cluster-spoke-1" {
   source      = "./init"
   ENVIRONMENT = "spoke-1"
 
-  INSTANCE_TYPE = "c5.large"
+  INSTANCE_TYPE = "t3.medium"
   SPOT_PRICE    = "0.99"
-  names         = ["spoke-1", "spoke-2", "spoke-3"]
+  names         = ["spoke1-1", "spoke1-2"]
+  ports         = [4222, 4223, 7422, 4225, 7222, 8080]
+}
+
+module "cluster-spoke-2" {
+  source      = "./init"
+  ENVIRONMENT = "spoke-2"
+
+  INSTANCE_TYPE = "t3.medium"
+  SPOT_PRICE    = "0.99"
+  names         = ["spoke2-1", "spoke2-2"]
   ports         = [4222, 4223, 7422, 4225, 7222, 8080]
 }
 
@@ -43,149 +53,61 @@ module "cluster-spoke-1" {
 #}
 
 locals {
-  allprivate = concat(values(module.cluster-hub.private_ip), values(module.cluster-spoke-1.private_ip))
-  allpub     = concat(values(module.cluster-hub.public_ip), values(module.cluster-spoke-1.public_ip))
+  allprivate = concat(concat(values(module.cluster-hub.private_ip), values(module.cluster-spoke-1.private_ip)), values(module.cluster-spoke-2.private_ip))
+  allpub     = concat(concat(values(module.cluster-hub.public_ip), values(module.cluster-spoke-1.public_ip)), values(module.cluster-spoke-2.public_ip))
 }
 
-resource "null_resource" "upload-hub" {
-  for_each = merge(module.cluster-hub.public_ip)
+module "upload-hub" {
+  source = "./install"
+  domain = "hub"
+  cluster = "cluster-hub"
+  public-ip = merge(module.cluster-hub.public_ip)
+  private-ip = merge(module.cluster-hub.private_ip)
+  cluster-nodes = merge(module.cluster-hub.private_ip)
 
-  connection {
-    type  = "ssh"
-    user  = "ec2-user"
-    host  = each.value
-    agent = true
-  }
+  cluster_pwd = random_string.protocols.result
+  sys_psw = random_string.sys.result
+  acc_psw = random_string.domain.result
 
-  provisioner "file" {
-    destination = "/home/ec2-user/cluster-hub.conf"
-    content     = templatefile("${path.module}/cfg/cluster-hub.cfg.tpl", {
-      host : each.value,
-      nodes : module.cluster-hub.private_ip,
-      domain : "hub",
-      cluster : "cluster-hub",
-      cluster_user : var.CLUSTER_USER,
-      gw_user : var.GW_USER,
-      protocols_pwd : random_string.protocols.result,
-      cluster_nodes : {
-        "cluster-leaf" : module.cluster-spoke-1.private_ip
-      }
-    })
-  }
-
-  provisioner "file" {
-    destination = "/home/ec2-user/leaf.conf"
-    content     = templatefile("${path.module}/cfg/leaf.cfg.tpl", {
-      isLeaf : false,
-      hub : [],
-      leaf : "",
-      sys_leaf : "",
-      sys_psw : "",
-      acc_psw : "",
-    })
-  }
-
-  provisioner "file" {
-    destination = "/home/ec2-user/account.conf"
-    content     = templatefile("${path.module}/cfg/account.cfg.tpl", {
-      sys_user : var.SYS_ADMIN,
-      sys_leaf : var.SYS_LEAF,
-      js_admin : var.DOMAIN_JS_ADMIN,
-      admin : var.DOMAIN_ADMIN,
-      client : var.DOMAIN_CLIENT,
-      public : var.DOMAIN_PUBLIC,
-      acc_psw : random_string.domain.result,
-      sys_psw : random_string.sys.result,
-      leaf : var.DOMAIN_LEAF,
-    })
-  }
-
-  provisioner "file" {
-    destination = "/etc/systemd/system/nats.service"
-    content     = templatefile("${path.module}/cfg/nats.service", {
-    })
-  }
-
-  provisioner "remote-exec" {
-    inline = ["sudo systemctl restart nats"]
-  }
-
-  #  provisioner "remote-exec" {
-  #    inline =  ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
-  #  }
+  leaf = false
 
   depends_on = [module.cluster-hub]
 }
 
-resource "null_resource" "upload-leaf" {
-  for_each = merge(module.cluster-spoke-1.public_ip)
+module "upload-leaf" {
+  source = "./install"
+  domain = "leaf"
+  cluster = "cluster-leaf"
+  public-ip = merge(module.cluster-spoke-1.public_ip)
+  private-ip = merge(module.cluster-spoke-1.private_ip)
+  cluster-nodes = merge(module.cluster-spoke-1.private_ip)
 
-  connection {
-    type  = "ssh"
-    user  = "ec2-user"
-    host  = each.value
-    agent = true
-  }
+  cluster_pwd = random_string.protocols.result
+  sys_psw = random_string.sys.result
+  acc_psw = random_string.domain.result
 
-  provisioner "file" {
-    destination = "/home/ec2-user/cluster-hub.conf"
-    content     = templatefile("${path.module}/cfg/cluster-hub.cfg.tpl", {
-      host : each.value,
-      nodes : module.cluster-spoke-1.private_ip,
-      domain : "leaf",
-      cluster : "cluster-leaf",
-      cluster_user : var.CLUSTER_USER,
-      protocols_pwd : random_string.protocols.result,
-      gw_user : var.GW_USER,
-      cluster_nodes : {
-        "cluster-hub" : module.cluster-hub.private_ip
-      }
-    })
-  }
-
-  provisioner "file" {
-    destination = "/home/ec2-user/leaf.conf"
-    content     = templatefile("${path.module}/cfg/leaf.cfg.tpl", {
-      hub : module.cluster-hub.private_ip,
-      sys_leaf : var.SYS_LEAF,
-      leaf : var.DOMAIN_LEAF,
-      sys_psw : random_string.sys.result,
-      acc_psw : random_string.domain.result,
-      isLeaf : true,
-    })
-  }
-
-  provisioner "file" {
-    destination = "/home/ec2-user/account.conf"
-    content     = templatefile("${path.module}/cfg/account.cfg.tpl", {
-      sys_user : var.SYS_ADMIN,
-      sys_leaf : var.SYS_LEAF,
-      js_admin : var.DOMAIN_JS_ADMIN,
-      admin : var.DOMAIN_ADMIN,
-      client : var.DOMAIN_CLIENT,
-      public : var.DOMAIN_PUBLIC,
-      acc_psw : random_string.domain.result,
-      sys_psw : random_string.sys.result,
-      leaf : var.DOMAIN_LEAF,
-    })
-  }
-
-  provisioner "file" {
-    destination = "/etc/systemd/system/nats.service"
-    content     = templatefile("${path.module}/cfg/nats.service", {
-    })
-  }
-
-  provisioner "remote-exec" {
-    inline = ["sudo systemctl restart nats"]
-  }
-
-  // why not started?
-  #  provisioner "remote-exec" {
-  #    inline =  ["screen -dmS new_screen nats-server -c ./cluster-hub.conf"]
-  #  }
+  leaf = true
+  hub = module.cluster-hub.private_ip
 
   depends_on = [module.cluster-hub, module.cluster-spoke-1]
+}
+
+module "upload-leaf2" {
+  source = "./install"
+  domain = "leaf2"
+  cluster = "cluster-leaf2"
+  public-ip = merge(module.cluster-spoke-2.public_ip)
+  private-ip = merge(module.cluster-spoke-2.private_ip)
+  cluster-nodes = merge(module.cluster-spoke-2.private_ip)
+
+  cluster_pwd = random_string.protocols.result
+  sys_psw = random_string.sys.result
+  acc_psw = random_string.domain.result
+
+  leaf = true
+  hub = module.cluster-hub.private_ip
+
+  depends_on = [module.cluster-hub, module.cluster-spoke-2]
 }
 
 resource "random_string" "protocols" {

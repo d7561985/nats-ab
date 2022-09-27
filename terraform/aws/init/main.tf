@@ -97,7 +97,7 @@ resource "aws_launch_template" "template" {
     }
   }
 
-  user_data = filebase64("${path.module}/userdata.sh")
+#  user_data = filebase64("${path.module}/userdata.sh")
 }
 
 resource "aws_instance" "instance" {
@@ -123,7 +123,7 @@ resource "aws_instance" "instance" {
     #    throughput  = 250
   }
 
-  user_data_base64 = filebase64("${path.module}/userdata.sh")
+  # user_data_base64 = filebase64("${path.module}/userdata.sh")
   tags = {
     Name = each.value
   }
