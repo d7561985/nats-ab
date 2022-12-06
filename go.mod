@@ -6,7 +6,7 @@ require (
 	github.com/caarlos0/env/v6 v6.9.2
 	github.com/d7561985/tel/v2 v2.0.3
 	github.com/joho/godotenv v1.4.0
-	github.com/nats-io/nats.go v1.15.0
+	github.com/nats-io/nats.go v1.21.0
 	github.com/pkg/errors v0.9.1
 	github.com/urfave/cli/v2 v2.7.1
 	golang.org/x/text v0.3.7
