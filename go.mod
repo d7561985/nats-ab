@@ -8,15 +8,14 @@ require (
 	github.com/joho/godotenv v1.4.0
 	github.com/nats-io/nats.go v1.15.0
 	github.com/pkg/errors v0.9.1
-	github.com/urfave/cli/v2 v2.7.1
+	github.com/urfave/cli/v2 v2.24.2
 	golang.org/x/text v0.3.7
 )
 
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
-	github.com/antzucaro/matchr v0.0.0-20210222213004-b04723ef80f0 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.2 // indirect
-	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
+	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -30,6 +29,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.21.9 // indirect
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
+	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
 	go.opentelemetry.io/contrib/instrumentation/host v0.27.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/runtime v0.27.0 // indirect
 	go.opentelemetry.io/otel v1.4.1 // indirect
